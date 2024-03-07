@@ -508,6 +508,7 @@ func LaunchFromImage(destServer lxd.InstanceServer, sourceServer lxd.ImageServer
 	defer s.Stop()
 
 	destServerArch, err := GetLXDServerArch(destServer)
+	log.Println("destServerArch", destServerArch)
 	if err != nil {
 		return fingerprint, err
 	}
@@ -530,22 +531,34 @@ func LaunchFromImage(destServer lxd.InstanceServer, sourceServer lxd.ImageServer
 	}
 
 	fingerprint, err = GetFingerprintByAlias(sourceServer, imageName, destServerArch)
+	log.Println("fingerprint: ", fingerprint)
 	if err != nil {
 		return fingerprint, err
 	}
 
 	imgInfo, _, err := sourceServer.GetImage(fingerprint)
+	log.Println("fingerprint: ", fingerprint)
+	log.Println("imgInfo-Aliases: ", imgInfo.Aliases)
+	log.Println("imgInfo-Cached: ", imgInfo.Cached)
+	log.Println("imgInfo-Filename: ", imgInfo.Filename)
+	log.Println("imgInfo-Fingerprint: ", imgInfo.Fingerprint)
+
+
 	if err != nil {
 		return fingerprint, err
 	}
 
+	log.Println("req: ", req)
 	op, err := destServer.CreateContainerFromImage(sourceServer, *imgInfo, req)
 	if err != nil {
+		log.Println("ERROR destServer.CreateContainerFromImage")
 		return fingerprint, err
 	}
 
+	log.Println(">>>op: ", op)
 	err = op.Wait()
 	if err != nil {
+		log.Println("ERROR op.Wait")
 		return fingerprint, err
 	}
 

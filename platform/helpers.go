@@ -178,7 +178,13 @@ func buildImage(bh *BraveHost, bravefile *shared.Bravefile) error {
 
 	bravefile.PlatformService.Name = "brave-build-" + strings.ReplaceAll(strings.ReplaceAll(imageStruct.ToBasename(), "_", "-"), ".", "-")
 
+	log.Println("image name: ", bravefile.PlatformService.Name)
+
 	err = checkUnits(lxdServer, bravefile.PlatformService.Name, bh.Remote.Profile)
+	if err != nil {
+		log.Println("Error chekUnits: ", err)
+	}
+
 	if err := shared.CollectErrors(err, ctx.Err()); err != nil {
 		return err
 	}
@@ -197,6 +203,8 @@ func buildImage(bh *BraveHost, bravefile *shared.Bravefile) error {
 		}
 	}
 
+	log.Println("location: ", bravefile.Base.Location)
+
 	switch bravefile.Base.Location {
 	case "public", "private":
 		var sourceImageServer lxd.ImageServer
@@ -205,8 +213,10 @@ func buildImage(bh *BraveHost, bravefile *shared.Bravefile) error {
 		if bravefile.Base.Location == "public" {
 			sourceImageServer, err = GetSimplestreamsLXDSever("https://images.linuxcontainers.org", nil)
 			if err != nil {
+				log.Println("error connecting to image server")
 				return err
 			}
+			log.Println("imageServer: ", sourceImageServer)
 		}
 		if bravefile.Base.Location == "private" {
 			var imageRemoteName string
@@ -229,7 +239,11 @@ func buildImage(bh *BraveHost, bravefile *shared.Bravefile) error {
 		}
 
 		// Check disk space
+		log.Println("sourceImageServer): ", sourceImageServer)
+		log.Println("bravefile.Base.Image: ", bravefile.Base.Image)
+		log.Println("buildServerArch: ", buildServerArch)
 		img, err := GetImageByAlias(sourceImageServer, bravefile.Base.Image, buildServerArch)
+		log.Println("img: ", img)
 		if err := shared.CollectErrors(err, ctx.Err()); err != nil {
 			return err
 		}
@@ -239,8 +253,16 @@ func buildImage(bh *BraveHost, bravefile *shared.Bravefile) error {
 			return err
 		}
 
+		log.Println("lxdServer: ", lxdServer)
+		log.Println("sourceImageServer: ", sourceImageServer)
+		log.Println("bravefile.Base.Image: ", bravefile.Base.Image)
+		log.Println("bravefile.PlatformService.Name: ", bravefile.PlatformService.Name)
+		log.Println("bh.Remote.Profile: ", bh.Remote.Profile)
+		log.Println("bh.Remote.Storage: ", bh.Remote.Storage)
+
 		imageFingerprint, err = LaunchFromImage(lxdServer, sourceImageServer, bravefile.Base.Image, bravefile.PlatformService.Name, bh.Remote.Profile, bh.Remote.Storage)
 		if err := shared.CollectErrors(err, ctx.Err()); err != nil {
+			log.Println("ERROR  LaunchFromImage")
 			return err
 		}
 
