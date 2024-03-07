@@ -1,5 +1,5 @@
 base:
-  image: ubuntu/22.04
+  image: ubuntu/jammy
   location: public
 
 packages:
